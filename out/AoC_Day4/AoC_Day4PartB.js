@@ -1,5 +1,5 @@
 {
-  let rawPassportData = `eyr:2029 byr:1931 hcl:z cid:128
+    let rawPassportData = `eyr:2029 byr:1931 hcl:z cid:128
 ecl:amb hgt:150cm iyr:2015 pid:148714704
 
 byr:2013 hgt:70cm pid:76982670 ecl:#4f9a1c
@@ -1128,59 +1128,106 @@ hgt:161cm iyr:1962
 pid:394421140
 ecl:gry
 cid:209 hcl:#efcc98 byr:2001`;
-
-  class BaseCredentials {
-    byr: number;
-    iyr: number;
-    eyr: number;
-    hgt: string;
-    hcl: string;
-    ecl: string;
-    pid: number;
-    cid: number;
-    constructor() {
-      this.byr = null;
-      this.iyr = null;
-      this.eyr = null;
-      this.hgt = null;
-      this.hcl = null;
-      this.ecl = null;
-      this.pid = null;
+    class BaseCredentials {
+        constructor() {
+            this.byr = null;
+            this.iyr = null;
+            this.eyr = null;
+            this.hgt = null;
+            this.hcl = null;
+            this.ecl = null;
+            this.pid = null;
+        }
     }
-  }
-
-  let convertToCredentials = function (stringCreds: string[]): BaseCredentials {
-    let creds = {} as BaseCredentials;
-
-    stringCreds.forEach((v, i, arr) => {
-      let pair = v.split(":");
-      creds[pair[0]] = pair[1];
-    });
-
-    return creds;
-  };
-
-  let convertRawCredToPairs = function (
-    rawCreds: string,
-    i: number,
-    arr: string[]
-  ): BaseCredentials {
-    let keyValues = rawCreds.split(/[ \n]+/);
-
-    return convertToCredentials(keyValues);
-  };
-
-  let ValidateCredentials = function (credsToCheck: BaseCredentials): boolean {
-    const tester = new BaseCredentials();
-    let keys = Object.keys(new BaseCredentials());
-
-    return keys.every((s, i, arr) => credsToCheck[s] != null);
-  };
-
-  let passedCredentials = rawPassportData
-    .split(/\n\n/)
-    .map(convertRawCredToPairs)
-    .filter((v, i, arr) => ValidateCredentials(v)).length;
-
-  console.log(passedCredentials);
+    function convertToCredentials(stringCreds) {
+        let creds = {};
+        stringCreds.forEach((v, i, arr) => {
+            let pair = v.split(":");
+            creds[pair[0]] = pair[1];
+        });
+        return creds;
+    }
+    function convertRawCredToPairs(rawCreds, i, arr) {
+        let keyValues = rawCreds.split(/[ \n]+/);
+        return convertToCredentials(keyValues);
+    }
+    function ValidateProperty(key, value) {
+        switch (key) {
+            case "byr": {
+                let testValue = value;
+                return (String(testValue).length === 4 &&
+                    1920 <= testValue &&
+                    testValue <= 2002);
+                break;
+            }
+            case "iyr": {
+                let testValue = value;
+                return (String(testValue).length === 4 &&
+                    2010 <= testValue &&
+                    testValue <= 2020);
+                break;
+            }
+            case "eyr": {
+                let testValue = value;
+                return (String(testValue).length === 4 &&
+                    2020 <= testValue &&
+                    testValue <= 2030);
+                break;
+            }
+            case "hgt": {
+                let testValue = value;
+                if (testValue.length < 3) {
+                    return false;
+                }
+                let suffix = testValue.substr(testValue.length - 2, 2);
+                let number = Number(testValue.substr(0, testValue.length - 2));
+                if (number.toString() == "NaN") {
+                    return false;
+                }
+                if (suffix != "in" && suffix != "cm") {
+                    return false;
+                }
+                if (suffix == "in") {
+                    return 59 <= number && number <= 76;
+                }
+                if (suffix == "cm") {
+                    return 150 <= number && number <= 193;
+                }
+                return false;
+                break;
+            }
+            case "hcl": {
+                let testValue = value.split("");
+                if (testValue[0] != "#") {
+                    return false;
+                }
+                return testValue
+                    .slice(1, testValue.length)
+                    .every((v, i, arr) => ("0" <= v && v <= "9") || ("a" <= v && v <= "f"));
+                break;
+            }
+            case "ecl": {
+                let testValue = value;
+                return (["amb", "blu", "brn", "gry", "grn", "hzl", "oth"].indexOf(testValue) >
+                    -1);
+                break;
+            }
+            case "pid": {
+                let testValue = value;
+                return testValue.length == 9;
+                break;
+            }
+        }
+    }
+    function ValidateCredentials(credsToCheck) {
+        const tester = new BaseCredentials();
+        let keys = Object.keys(new BaseCredentials());
+        return keys.every((s, i, arr) => credsToCheck[s] != null && ValidateProperty(s, credsToCheck[s]));
+    }
+    let passedCredentials = rawPassportData
+        .split(/\n\n/)
+        .map(convertRawCredToPairs)
+        .filter((v, i, arr) => ValidateCredentials(v)).length;
+    console.log(passedCredentials);
 }
+//# sourceMappingURL=AoC_Day4PartB.js.map
